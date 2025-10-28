@@ -1,4 +1,6 @@
 
+using Microsoft.EntityFrameworkCore;
+
 namespace HotelListing.Api
 {
     public class Program
@@ -8,6 +10,12 @@ namespace HotelListing.Api
             var builder = WebApplication.CreateBuilder(args);
 
             // Add services to the container.
+
+            //builder.Services.AddDbContextFactory<Data.AppDBContext>(options =>
+            //    options.UseSqlServer(builder.Configuration.GetConnectionString("AppDbConnString")));
+
+            builder.Services.AddDbContext<Data.AppDBContext>(options =>
+                options.UseSqlServer(builder.Configuration.GetConnectionString("AppDbConnString")));
 
             builder.Services.AddControllers();
             // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi

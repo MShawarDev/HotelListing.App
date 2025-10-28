@@ -11,9 +11,9 @@ namespace HotelListing.Api.Controllers
     {
         private static List<Hotel> Hotels = new List<Hotel>
          {
-             new Hotel { HotelId = 1, Name = "Hotel One", Address = "123 Main St", PhoneNumber = "555-1234", Rating = 4.7 },
-             new Hotel { HotelId = 2, Name = "Hotel Two", Address = "456 Elm St", PhoneNumber = "555-5678", Rating = 2.5 },
-             new Hotel { HotelId = 3, Name = "Hotel Three", Address = "789 Oak St", PhoneNumber = "555-9012", Rating = 3.4 }
+             new Hotel { Id = 1, Name = "Hotel One", Address = "123 Main St", PhoneNumber = "555-1234", Rating = 4.7 },
+             new Hotel { Id = 2, Name = "Hotel Two", Address = "456 Elm St", PhoneNumber = "555-5678", Rating = 2.5 },
+             new Hotel { Id = 3, Name = "Hotel Three", Address = "789 Oak St", PhoneNumber = "555-9012", Rating = 3.4 }
          };
 
         // GET: api/<HotelsController>
@@ -27,7 +27,7 @@ namespace HotelListing.Api.Controllers
         [HttpGet("{id}")]
         public ActionResult<Hotel> Get(int id)
         {
-            var hotel = Hotels.FirstOrDefault(h => h.HotelId == id);
+            var hotel = Hotels.FirstOrDefault(h => h.Id == id);
             if (hotel is null)
             {
                 return NotFound();
@@ -42,21 +42,21 @@ namespace HotelListing.Api.Controllers
         [HttpPost]
         public ActionResult<Hotel> Post([FromBody] Hotel newHotel)
         {
-            if (Hotels.Any(h => h.HotelId == newHotel.HotelId))
+            if (Hotels.Any(h => h.Id == newHotel.Id))
             {
                 return BadRequest("Already exist");
             }
 
             Hotels.Add(newHotel);
 
-            return CreatedAtAction(nameof(Get), new { id = newHotel.HotelId }, newHotel);
+            return CreatedAtAction(nameof(Get), new { id = newHotel.Id }, newHotel);
         }
 
         // PUT api/<HotelsController>/5
         [HttpPut("{id}")]
         public ActionResult Put(int id, [FromBody] Hotel updatedHotel)
         {
-            var existingHotel = Hotels.FirstOrDefault(h => h.HotelId == id);
+            var existingHotel = Hotels.FirstOrDefault(h => h.Id == id);
             if (existingHotel is null)
             {
                 return NotFound();
@@ -74,7 +74,7 @@ namespace HotelListing.Api.Controllers
         [HttpDelete("{id}")]
         public ActionResult Delete(int id)
         {
-            var hotel = Hotels.FirstOrDefault(h => h.HotelId == id);
+            var hotel = Hotels.FirstOrDefault(h => h.Id == id);
             if (hotel is null)
             {
                 return NotFound(new { message = "Hotel not found"});
