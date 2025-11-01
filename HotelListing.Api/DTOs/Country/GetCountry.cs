@@ -3,5 +3,6 @@
 public record GetCountry(
     int Id,
     string Name,
-    string ShortName
+    string ShortName,
+    List<GetCountryHotel> CountryHotels
     );

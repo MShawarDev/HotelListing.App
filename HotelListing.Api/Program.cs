@@ -22,6 +22,10 @@ namespace HotelListing.Api
                 options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
             }
             );
+
+            builder.Services.AddScoped<Contracts.ICountriesService, Services.CountriesService>();
+            builder.Services.AddScoped<Contracts.IHotelsService, Services.HotelsService>();
+
             // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
             builder.Services.AddOpenApi();
 

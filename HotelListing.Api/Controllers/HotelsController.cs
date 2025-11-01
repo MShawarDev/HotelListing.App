@@ -1,36 +1,26 @@
-﻿using HotelListing.Api.Data;
+﻿using HotelListing.Api.Contracts;
+using HotelListing.Api.Data;
 using HotelListing.Api.DTOs.Hotel;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace HotelListing.Api.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class HotelsController(AppDBContext context) : ControllerBase
+public class HotelsController(IHotelsService hotelsService) : ControllerBase
 {
     // GET: api/Hotels
     [HttpGet]
     public async Task<ActionResult<IEnumerable<GetHotel>>> GetHotels()
     {
-        var hotels = await context.Hotels.Include(h => h.Country)
-            .Select(h => new GetHotel(h.Id, h.Name, h.Address, h.PhoneNumber, h.Rating, h.CountryId, h.Country!.Name))
-            .ToListAsync();
-
-        return hotels;
+        return await hotelsService.GetHotelsAsync();
     }
 
     // GET: api/Hotels/5
     [HttpGet("{id}")]
     public async Task<ActionResult<GetHotel>> GetHotel(int id)
     {
-        var hotel = await context.Hotels.Include(h => h.Country).FirstOrDefaultAsync(h => h.Id == id);
-        if (hotel == null)
-        {
-            return NotFound();
-        }
-
-        return new GetHotel(id, hotel.Name, hotel.Address, hotel.PhoneNumber, hotel.Rating, hotel.CountryId, hotel.Country!.Name);
+        return await hotelsService.GetHotelAsync(id);
     }
 
     // PUT: api/Hotels/5
@@ -43,32 +33,19 @@ public class HotelsController(AppDBContext context) : ControllerBase
             return BadRequest();
         }
 
-        var hotel = await context.Hotels.FindAsync(id);
-        if (hotel == null)
+        try
+        {
+            await hotelsService.UpdateHotelAsync(id, updatedHotel);
+        }
+        catch (KeyNotFoundException)
         {
             return NotFound();
         }
-
-        hotel.Name = updatedHotel.Name;
-        hotel.Address = updatedHotel.Address;
-        hotel.PhoneNumber = updatedHotel.PhoneNumber;
-        hotel.Rating = updatedHotel.Rating;
-        hotel.CountryId = updatedHotel.CountryId;
-
-        try
+        catch (Exception ex)
         {
-            await context.SaveChangesAsync();
-        }
-        catch (DbUpdateConcurrencyException)
-        {
-            if (!await HotelExistsAsync(id))
-            {
-                return NotFound();
-            }
-            else
-            {
-                throw;
-            }
+            // Log error
+
+            return Problem(detail: "An error occured while updating", statusCode: StatusCodes.Status500InternalServerError);
         }
 
         return NoContent();
@@ -79,40 +56,43 @@ public class HotelsController(AppDBContext context) : ControllerBase
     [HttpPost]
     public async Task<ActionResult<Hotel>> PostHotel(CreateHotel newHotel)
     {
-        var hotel = new Hotel
+        try
         {
-            Name = newHotel.Name,
-            Address = newHotel.Address,
-            PhoneNumber = newHotel.PhoneNumber,
-            Rating = newHotel.Rating,
-            CountryId = newHotel.CountryId
-        };
+            var createdHotel = await hotelsService.CreateHotelAsync(newHotel);
 
-        context.Hotels.Add(hotel);
+            return CreatedAtAction("GetHotel", new { id = createdHotel.Id }, createdHotel);
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound();
+        }
+        catch (Exception ex)
+        {
+            // Log error
 
-        await context.SaveChangesAsync();
-
-        return CreatedAtAction("GetHotel", new { id = hotel.Id }, newHotel);
+            return Problem(detail: "An error occured while creating", statusCode: StatusCodes.Status500InternalServerError);
+        }
     }
 
     // DELETE: api/Hotels/5
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteHotel(int id)
     {
-        var hotel = await context.Hotels.FindAsync(id);
-        if (hotel == null)
+        try
+        {
+            await hotelsService.DeleteHotelAsync(id);
+        }
+        catch (KeyNotFoundException)
         {
             return NotFound();
         }
+        catch (Exception ex)
+        {
+            // Log error
 
-        context.Hotels.Remove(hotel);
-        await context.SaveChangesAsync();
+            return Problem(detail: "An error occured while deleting", statusCode: StatusCodes.Status500InternalServerError);
+        }
 
         return NoContent();
-    }
-
-    private async Task<bool> HotelExistsAsync(int id)
-    {
-        return await context.Hotels.AnyAsync(e => e.Id == id);
     }
 }
