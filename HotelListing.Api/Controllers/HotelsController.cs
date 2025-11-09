@@ -1,98 +1,67 @@
-﻿using HotelListing.Api.Contracts;
-using HotelListing.Api.Data;
-using HotelListing.Api.DTOs.Hotel;
+﻿using HotelListing.App.Application.Contracts;
+using HotelListing.App.Application.DTOs.Hotel;
+using HotelListing.App.Common.Constants;
+using HotelListing.App.Common.Models.Filtering;
+using HotelListing.App.Common.Models.Paging;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace HotelListing.Api.Controllers;
+namespace HotelListing.App.Api.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class HotelsController(IHotelsService hotelsService) : ControllerBase
+[Authorize]
+public class HotelsController(IHotelsService hotelsService) : BaseApiController
 {
     // GET: api/Hotels
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<GetHotel>>> GetHotels()
+    public async Task<ActionResult<PagedResult<GetHotelDto>>> GetHotels(
+        [FromQuery] PaginationParameters paginationParameters,
+        [FromQuery] HotelFilterParameters filters)
     {
-        return await hotelsService.GetHotelsAsync();
+        var result = await hotelsService.GetHotelsAsync(paginationParameters, filters);
+        return ToActionResult(result);
     }
 
     // GET: api/Hotels/5
     [HttpGet("{id}")]
-    public async Task<ActionResult<GetHotel>> GetHotel(int id)
+    public async Task<ActionResult<GetHotelDto>> GetHotel(int id)
     {
-        return await hotelsService.GetHotelAsync(id);
+        var result = await hotelsService.GetHotelAsync(id);
+        return ToActionResult(result);
     }
 
     // PUT: api/Hotels/5
-    // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
     [HttpPut("{id}")]
-    public async Task<IActionResult> PutHotel(int id, UpdateHotel updatedHotel)
+    [Authorize(Roles = RoleNames.Administrator)]
+    public async Task<IActionResult> PutHotel(int id, UpdateHotelDto hotelDto)
     {
-        if (id != updatedHotel.Id)
+        if (id != hotelDto.Id)
         {
-            return BadRequest();
+            return BadRequest("Id route value must match payload Id.");
         }
 
-        try
-        {
-            await hotelsService.UpdateHotelAsync(id, updatedHotel);
-        }
-        catch (KeyNotFoundException)
-        {
-            return NotFound();
-        }
-        catch (Exception ex)
-        {
-            // Log error
-
-            return Problem(detail: "An error occured while updating", statusCode: StatusCodes.Status500InternalServerError);
-        }
-
-        return NoContent();
+        var result = await hotelsService.UpdateHotelAsync(id, hotelDto);
+        return ToActionResult(result);
     }
 
     // POST: api/Hotels
-    // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
     [HttpPost]
-    public async Task<ActionResult<Hotel>> PostHotel(CreateHotel newHotel)
+    [Authorize(Roles = RoleNames.Administrator)]
+    public async Task<ActionResult<GetHotelDto>> PostHotel(CreateHotelDto hotelDto)
     {
-        try
-        {
-            var createdHotel = await hotelsService.CreateHotelAsync(newHotel);
+        var result = await hotelsService.CreateHotelAsync(hotelDto);
+        if (!result.IsSuccess) return MapErrorsToResponse(result.Errors);
 
-            return CreatedAtAction("GetHotel", new { id = createdHotel.Id }, createdHotel);
-        }
-        catch (KeyNotFoundException)
-        {
-            return NotFound();
-        }
-        catch (Exception ex)
-        {
-            // Log error
-
-            return Problem(detail: "An error occured while creating", statusCode: StatusCodes.Status500InternalServerError);
-        }
+        return CreatedAtAction(nameof(GetHotel), new { id = result.Value!.Id }, result.Value);
     }
 
     // DELETE: api/Hotels/5
     [HttpDelete("{id}")]
+    [Authorize(Roles = RoleNames.Administrator)]
     public async Task<IActionResult> DeleteHotel(int id)
     {
-        try
-        {
-            await hotelsService.DeleteHotelAsync(id);
-        }
-        catch (KeyNotFoundException)
-        {
-            return NotFound();
-        }
-        catch (Exception ex)
-        {
-            // Log error
-
-            return Problem(detail: "An error occured while deleting", statusCode: StatusCodes.Status500InternalServerError);
-        }
-
-        return NoContent();
+        var result = await hotelsService.DeleteHotelAsync(id);
+        return ToActionResult(result);
     }
 }

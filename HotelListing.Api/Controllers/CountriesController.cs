@@ -1,106 +1,91 @@
-﻿using HotelListing.Api.Contracts;
-using HotelListing.Api.Data;
-using HotelListing.Api.DTOs.Country;
+﻿using HotelListing.Api.Controllers;
+using HotelListing.App.Application.Contracts;
+using HotelListing.App.Application.DTOs.Country;
+using HotelListing.App.Common.Constants;
+using HotelListing.App.Common.Models.Filtering;
+using HotelListing.App.Common.Models.Paging;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OutputCaching;
+using Microsoft.AspNetCore.RateLimiting;
 
-namespace HotelListing.Api.Controllers;
+namespace HotelListing.App.Api.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class CountriesController(ICountriesService countriesService) : ControllerBase
+[EnableRateLimiting(RateLimitingConstants.FixedPolicy)]
+public class CountriesController(ICountriesService countriesService) : BaseApiController
 {
     // GET: api/Countries
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<GetCountry>>> GetCountries()
+    [OutputCache(PolicyName = CacheConstants.AuthenticatedUserCachingPolicy)]
+    public async Task<ActionResult<IEnumerable<GetCountriesDto>>> GetCountries(
+        [FromQuery] CountryFilterParameters? filters)
     {
-        var countries = await countriesService.GetCountriesAsync();
+        var result = await countriesService.GetCountriesAsync(filters);
+        return ToActionResult(result);
+    }
 
-        return countries;
+    // GET: api/Countries/{id}/hotels
+    [HttpGet("{countryId:int}/hotels")]
+    public async Task<ActionResult<GetCountryHotelsDto>> GetCountryHotels(
+        [FromRoute] int countryId,
+        [FromQuery] PaginationParameters paginationParameters,
+        [FromQuery] CountryFilterParameters filters)
+    {
+        var result = await countriesService.GetCountryHotelsAsync(countryId, paginationParameters, filters);
+        return ToActionResult(result);
     }
 
     // GET: api/Countries/5
     [HttpGet("{id}")]
-    public async Task<ActionResult<GetCountry>> GetCountry(int id)
+    public async Task<ActionResult<GetCountryDto>> GetCountry(int id)
     {
-        var country = await countriesService.GetCountryAsync(id);
-        if( country == null)
-        {
-            return NotFound();
-        }
-
-        return country;
+        var result = await countriesService.GetCountryAsync(id);
+        return ToActionResult(result);
     }
 
     // PUT: api/Countries/5
-    // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
     [HttpPut("{id}")]
-    public async Task<IActionResult> PutCountry(int id, UpdateCountry updatedCountry)
+    [Authorize(Roles = RoleNames.Administrator)]
+    public async Task<IActionResult> PutCountry(int id, UpdateCountryDto updateDto)
     {
-        if (id != updatedCountry.Id)
+        var result = await countriesService.UpdateCountryAsync(id, updateDto);
+        return ToActionResult(result);
+    }
+
+    // PATCH: api/Countries/5
+    [HttpPatch("{id}")]
+    [Authorize(Roles = RoleNames.Administrator)]
+    public async Task<IActionResult> PatchCountry(int id, [FromBody] JsonPatchDocument<UpdateCountryDto> patchDoc)
+    {
+        if (patchDoc == null)
         {
-            return BadRequest();
+            return BadRequest("Patch document is required.");
         }
 
-        try
-        {
-            await countriesService.UpdateCountryAsync(id, updatedCountry);
-        }
-        catch(KeyNotFoundException)
-        {
-            return NotFound();
-        }
-        catch (Exception ex)
-        {
-            // Log error
-
-            return Problem(detail: "An error occured while updating", statusCode: StatusCodes.Status500InternalServerError);
-        }
-
-        return NoContent();
+        var result = await countriesService.PatchCountryAsync(id, patchDoc);
+        return ToActionResult(result);
     }
 
     // POST: api/Countries
-    // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
     [HttpPost]
-    public async Task<ActionResult<Country>> PostCountry(CreateCountry newCountry)
+    [Authorize(Roles = RoleNames.Administrator)]
+    public async Task<ActionResult<GetCountryDto>> PostCountry(CreateCountryDto createDto)
     {
-        try
-        {
-            var createdCountry = await countriesService.CreateCountryAsync(newCountry);
+        var result = await countriesService.CreateCountryAsync(createDto);
+        if (!result.IsSuccess) return MapErrorsToResponse(result.Errors);
 
-            return CreatedAtAction("GetCountry", new { id = createdCountry.Id }, createdCountry);
-        }
-        catch (KeyNotFoundException)
-        {
-            return NotFound();
-        }
-        catch (Exception ex)
-        {
-            // Log error
-
-            return Problem(detail: "An error occured while creating", statusCode: StatusCodes.Status500InternalServerError);
-        }
+        return CreatedAtAction(nameof(GetCountry), new { id = result.Value!.Id }, result.Value);
     }
 
     // DELETE: api/Countries/5
     [HttpDelete("{id}")]
+    [Authorize(Roles = RoleNames.Administrator)]
     public async Task<IActionResult> DeleteCountry(int id)
     {
-        try
-        {
-            await countriesService.DeleteCountryAsync(id);
-        }
-        catch (KeyNotFoundException)
-        {
-            return NotFound();
-        }
-        catch (Exception ex)
-        {
-            // Log error
-
-            return Problem(detail: "An error occured while deleting", statusCode: StatusCodes.Status500InternalServerError);
-        }
-
-        return NoContent();
+        var result = await countriesService.DeleteCountryAsync(id);
+        return ToActionResult(result);
     }
 }

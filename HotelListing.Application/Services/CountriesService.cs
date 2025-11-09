@@ -12,6 +12,8 @@ using HotelListing.App.Domain;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.EntityFrameworkCore;
 
+namespace HotelListing.App.Application.Services;
+
 public class CountriesService(AppDBContext context, IMapper mapper) : ICountriesService
 {
     public async Task<Result<IEnumerable<GetCountriesDto>>> GetCountriesAsync(CountryFilterParameters? filters)

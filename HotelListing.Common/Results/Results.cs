@@ -34,6 +34,9 @@ public readonly record struct Result<T>
 
     public static Result<T> Success(T value) => new(true, value, []);
     public static Result<T> Failure(params Error[] errors) => new(false, default, errors);
+    public static Result<T> BadRequest(params Error[] errors) => new(false, default, errors);
+    public static Result<T> NotFound(params Error[] errors) => new(false, default, errors);
+
 
     public Result<K> Map<K>(Func<T, K> map) =>
         IsSuccess ? Result<K>.Success(map(Value!)) : Result<K>.Failure(Errors);
