@@ -1,0 +1,4 @@
+﻿
+Seq User:
+	- user: admin
+	- password: Ci51251988

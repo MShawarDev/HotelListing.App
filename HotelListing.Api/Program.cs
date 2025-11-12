@@ -1,4 +1,5 @@
 
+using HealthChecks.UI.Client;
 using HotelListing.App.Api.Middleware;
 using HotelListing.App.Application.Contracts;
 using HotelListing.App.Application.MappingProfiles;
@@ -6,7 +7,10 @@ using HotelListing.App.Application.Services;
 using HotelListing.App.CachePolicies;
 using HotelListing.App.Common.Constants;
 using HotelListing.App.Common.Models.Config;
+using HotelListing.App.Domain;
+using HotelListing.App.Handlers;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -14,7 +18,8 @@ using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.IdentityModel.Tokens;
-
+using Serilog;
+using Serilog.Events;
 using System.Text;
 using System.Threading.RateLimiting;
 
@@ -40,7 +45,7 @@ try
     );
 
     // Add services to the IoC container.
-    var connectionString = builder.Configuration.GetConnectionString("HotelListingDbConnectionString");
+    var connectionString = builder.Configuration.GetConnectionString("AppDbConnString");
 
     builder.Services.AddDbContextPool<AppDBContext>(options =>
     {

@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HotelListing.App.Domain", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HotelListing.App.Common", "HotelListing.Common\HotelListing.App.Common.csproj", "{8A1122B2-7DE4-48D4-B696-A40075F3336A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HotelListing.App.BlazorUI", "HotelListing.App.BlazorUI\HotelListing.App.BlazorUI.csproj", "{34F0AC54-A6FD-49A0-ADAB-B06486DE2765}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{8A1122B2-7DE4-48D4-B696-A40075F3336A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8A1122B2-7DE4-48D4-B696-A40075F3336A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8A1122B2-7DE4-48D4-B696-A40075F3336A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{34F0AC54-A6FD-49A0-ADAB-B06486DE2765}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{34F0AC54-A6FD-49A0-ADAB-B06486DE2765}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{34F0AC54-A6FD-49A0-ADAB-B06486DE2765}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{34F0AC54-A6FD-49A0-ADAB-B06486DE2765}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
